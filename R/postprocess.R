@@ -86,5 +86,10 @@ postprocess<-function(fit,uid,vid,lid,rnames=NULL,cnames=NULL){
              ret="df", G=G, Z=Z, rnames=rnames, cnames=cnames)
   res$dev<-fit$dev; res$glmpca_family<-fit$gf
   res$dev_smooth<-fit$dev_smooth #NULL unless minibatch=='stochastic'
+  if(!is.null(fit$lik)) {
+
+    res$lik <- fit$lik
+
+  }
   res
 }

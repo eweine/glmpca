@@ -198,8 +198,17 @@ avagrad_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   sz<-if(gf$glmpca_fam=="binom"){ gf$binom_n } else { NULL }
   #run optimization
   dev<-rep(NA,ctl$maxIter)
+  lik <- rep(NA,ctl$maxIter)
   for(t in 1:ctl$maxIter){
     dev[t]<-gf$dev_func(Y, rfunc(U,V,offsets), sz=sz)
+    # here, I want to make the likelihood calculation faster and 
+    # have it use less memory
+    # I should probably also have it print out how much time it is taking
+    # because this will give me a sense for how much total time is being taken up
+    # I imagine this should be reasonably easy with the code that I have
+    # but I will probably have to adapt it slightly
+    # because of the difference between U and V / the offsets
+    lik[t] <- sum(dpois(as.vector(Y), as.vector(rfunc(U,V,offsets)), log = TRUE))
     check_divergence(dev[t],"avagrad",ctl$lr)
     if(ctl$verbose){print_status(dev[t],t,gf$nb_theta)}
     if(t>ctl$minIter && check_convergence(dev[t-1],dev[t],ctl$tol,ctl$minDev)){
@@ -235,7 +244,7 @@ avagrad_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
       gf<-glmpca_family(gf$glmpca_fam, nb_theta=pmin(NB_THETA_MAX,nb_theta))
     }
   }
-  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf)
+  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, lik = lik[1:t])
 }
 
 #this one updates loadings V after each epoch, equivalent to full gradient
@@ -429,9 +438,10 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   m_v<-v_v<-matrix(0,nrow=nrow(Y),ncol=length(vid))
   # if(gf$glmpca_fam %in% c("nb","nb2")){ m_th<-v_th<- 0*gf$nb_theta }
   sz<-if(gf$glmpca_fam=="binom"){ gf$binom_n } else { NULL }
-  
+  loglik_const <- sum(MatrixExtra::mapSparse(Y, lfactorial))
   #run optimization
   dev<-rep(NA,ctl$maxIter)
+  lik <- rep(NA,ctl$maxIter)
   dev_smooth<-rep(NA,ctl$maxIter)
   for(t in 1:ctl$maxIter){ #one iteration = 1 epoch
     #create minibatch indices
@@ -488,6 +498,16 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     
     #assess convergence after end of each epoch
     dev[t]<-adj_factor*gf$dev_func(Ymb,R,sz=szb)
+    #lik[t] <- sum(dpois(as.vector(Y), exp(as.vector(rfunc(U,V,offsets))), log = TRUE))
+    print("calculating likelihood...")
+    start_lik_time <- Sys.time()
+    lik[t] <- plash:::lik_glmpca_pois_log_sp(
+      Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
+    )
+    print(lik[t])
+    end_lik_time <- Sys.time()
+    time_taken <- difftime(end_lik_time, start_lik_time, units = "secs")
+    print(glue::glue("Took {time_taken} seconds to compute likelihood"))
     check_divergence(dev[t],"avagrad",ctl$lr)
     j<-seq.int(max(1,t-10+1),t)
     #dev_smooth[t]<-exp(mean(log(dev[j]))) #mean(dev[j])
@@ -509,5 +529,5 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     }
   }
   list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, 
-       dev_smooth=check_dev_decr(dev_smooth[1:t]))
+       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:t])
 }

@@ -67,3 +67,23 @@ colNorms<-function(x){
 #   U<-t(fit$d[1:L]*fit$vt)/wc
 #   list(A=A,G=G,U=U,V=V)
 # }
+
+lik_glmpca_pois_log_sp <- function(Y, LL, FF, const) {
+  
+  Y_summary <- Matrix::summary(Y)
+  lik <- big_elementwise_mult_crossprod(
+    LL,
+    FF,
+    Y_summary$x,
+    Y_summary$i - 1,
+    Y_summary$j - 1,
+    nrow(Y_summary)
+  ) - big_exp_crossprod(
+    LL,
+    FF,
+    nrow(Y),
+    ncol(Y)
+  ) - const
+  return(lik)
+  
+}
