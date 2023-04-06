@@ -169,7 +169,7 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
       gf<-glmpca_family(gf$glmpca_fam, nb_theta=pmin(NB_THETA_MAX,nb_theta))
     }
   }
-  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf)
+  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, lik=lik)
 }
 
 #in the avagrad paper, lr=alpha (step size)
