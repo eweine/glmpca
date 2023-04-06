@@ -126,7 +126,7 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     dev[t]<-gf$dev_func(Y,rfunc(U,V,offsets),sz=sz)
     print("calculating likelihood...")
     start_lik_time <- Sys.time()
-    lik[t] <- plash:::lik_glmpca_pois_log(
+    lik[t] <- lik_glmpca_pois_log(
       Y, rfunc(U,V,offsets), loglik_const
     )
     print(lik[t])
