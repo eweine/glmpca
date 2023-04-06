@@ -118,7 +118,7 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   lid<-intersect(uid,vid)
   stopifnot(all(c("penalty","maxIter","minIter","tol") %in% names(ctl)))
   sz<-if(gf$glmpca_fam=="binom"){ gf$binom_n } else { NULL }
-  loglik_const <- sum(MatrixExtra::mapSparse(Y, lfactorial))
+  loglik_const <- sum(lfactorial(Y))
   lik<-rep(NA,ctl$maxIter)
   dev<-rep(NA,ctl$maxIter)
   for(t in 1:ctl$maxIter){
@@ -126,8 +126,8 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     dev[t]<-gf$dev_func(Y,rfunc(U,V,offsets),sz=sz)
     print("calculating likelihood...")
     start_lik_time <- Sys.time()
-    lik[t] <- plash:::lik_glmpca_pois_log_sp(
-      Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
+    lik[t] <- plash:::lik_glmpca_pois_log(
+      Y, rfunc(U,V,offsets), loglik_const
     )
     print(lik[t])
     end_lik_time <- Sys.time()

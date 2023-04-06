@@ -87,3 +87,11 @@ lik_glmpca_pois_log_sp <- function(Y, LL, FF, const) {
   return(lik)
   
 }
+
+lik_glmpca_pois_log <- function(Y, H, const) {
+  
+  lik <- sum(Y * H - exp(H)) - const
+  return(lik)
+  
+}
+
