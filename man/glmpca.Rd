@@ -16,6 +16,7 @@ glmpca(
   X = NULL,
   Z = NULL,
   init = list(factors = NULL, loadings = NULL),
+  init_coefX = NULL,
   ...
 )
 }
@@ -67,6 +68,9 @@ a feature-specific intercept and want to avoid collinearity.}
 
 \item{init}{a list containing initial estimates for the factors (\code{U}) 
 and loadings (\code{V}) matrices.}
+
+\item{init_coefX}{Matrix containing initial estimates \code{A} of
+coefficients for the observation-specific covariates matrix \code{X}.}
 
 \item{...}{additional named arguments. Provided only for backward 
 compatibility.}

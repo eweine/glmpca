@@ -40,6 +40,8 @@
 #' @param Z a matrix of row (feature) covariates, usually not needed.
 #' @param init a list containing initial estimates for the factors (\code{U}) 
 #'   and loadings (\code{V}) matrices.
+#' @param init_coefX Matrix containing initial estimates \code{A} of
+#'   coefficients for the observation-specific covariates matrix \code{X}.
 #' @param ... additional named arguments. Provided only for backward 
 #'   compatibility.
 #'
@@ -167,10 +169,11 @@
 #' @importFrom methods is
 #' @export
 glmpca<-function(Y, L, fam=c("poi","nb","nb2","binom","mult","bern"), 
-                   minibatch=c("none","stochastic","memoized"),
-                   optimizer=c("avagrad","fisher"), ctl = list(), 
-                   sz=NULL, nb_theta=NULL, X=NULL, Z=NULL, 
-                   init=list(factors=NULL, loadings=NULL), ...){
+                 minibatch=c("none","stochastic","memoized"),
+                 optimizer=c("avagrad","fisher"), ctl = list(), 
+                 sz=NULL, nb_theta=NULL, X=NULL, Z=NULL, 
+                 init=list(factors=NULL, loadings=NULL),
+                 init_coefX=NULL, ...) {
   #Y is a matrix-like object, must support the following operations:
   #min,max,as.matrix,sum,colSums,colMeans,rowSums,rowMeans,`[`
   
@@ -231,7 +234,11 @@ glmpca<-function(Y, L, fam=c("poi","nb","nb2","binom","mult","bern"),
   gf<-gnt$gf; rfunc<-gnt$rfunc; offsets<-gnt$offsets
   
   #initialize factors and loadings matrices
-  uv<-uv_init(N, J, L, gnt$intercepts, X=X, Z=Z, init=init)
+  if (is.null(init_coefX))
+    a1 <- gnt$intercepts
+  else
+    a1 <- init_coefX
+  uv <- uv_init(N, J, L, a1, X=X, Z=Z, init=init)
   U<-uv$U; V<-uv$V; lid<-uv$lid; uid<-uv$uid; vid<-uv$vid
   
   #minimize the deviance using an optimizer
