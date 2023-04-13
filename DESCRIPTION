@@ -1,6 +1,6 @@
 Package: glmpca
 Title: Dimension Reduction of Non-Normally Distributed Data
-Version: 0.2.1.9000
+Version: 0.2.2.9000
 Date: 2023-04-13
 Description: Implements a generalized version of principal components analysis
     (GLM-PCA) for dimension reduction of non-normally distributed data such as

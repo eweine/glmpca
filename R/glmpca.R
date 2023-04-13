@@ -293,6 +293,8 @@ glmpca<-function(Y, L, fam=c("poi","nb","nb2","binom","mult","bern"),
   }
   #print(class(Y))
   res<-postprocess(fit,uid,vid,lid,rnames=rownames(Y),cnames=colnames(Y))
+  res$U <- fit$U
+  res$V <- fit$V
   fpars<-list(ctl=ctl,offsets=offsets,optimizer=optimizer,minibatch=minibatch)
   res<-c(res,fpars) #S3 object of class "glmpca" (really just a big list)
   class(res)<-"glmpca"
