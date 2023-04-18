@@ -452,6 +452,13 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   lik <- rep(NA,ctl$maxIter)
   time <- rep(NA,ctl$maxIter)
   dev_smooth<-rep(NA,ctl$maxIter)
+  print("calculating likelihood...")
+  start_lik_time <- Sys.time()
+  lik[1] <- plash:::lik_glmpca_pois_log_sp(
+    Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
+  )
+  print(lik[1])
+  end_lik_time <- Sys.time()
   for(t in 1:ctl$maxIter){ #one iteration = 1 epoch
     #create minibatch indices
     start_iter_time <- Sys.time()
@@ -511,10 +518,10 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     #lik[t] <- sum(dpois(as.vector(Y), exp(as.vector(rfunc(U,V,offsets))), log = TRUE))
     print("calculating likelihood...")
     start_lik_time <- Sys.time()
-    lik[t] <- plash:::lik_glmpca_pois_log_sp(
+    lik[t+1] <- plash:::lik_glmpca_pois_log_sp(
       Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
     )
-    print(lik[t])
+    print(lik[t+1])
     end_lik_time <- Sys.time()
     time_taken <- difftime(end_lik_time, start_lik_time, units = "secs")
     print(glue::glue("Took {time_taken} seconds to compute likelihood"))
@@ -544,5 +551,5 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     }
   }
   list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, 
-       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:t], time[1:t])
+       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:t], time[1:(t+1)])
 }
