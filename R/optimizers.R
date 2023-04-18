@@ -119,17 +119,12 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   stopifnot(all(c("penalty","maxIter","minIter","tol") %in% names(ctl)))
   sz<-if(gf$glmpca_fam=="binom"){ gf$binom_n } else { NULL }
   loglik_const <- sum(lfactorial(Y))
-  lik<-rep(NA,ctl$maxIter)
   dev<-rep(NA,ctl$maxIter)
+  time <- rep(NA,ctl$maxIter)
   for(t in 1:ctl$maxIter){
+    start_iter_time <- Sys.time()
     #rmse[t]<-sd(Y-ilfunc(rfunc(U,V,offsets)))
     dev[t]<-gf$dev_func(Y,rfunc(U,V,offsets),sz=sz)
-    print("calculating likelihood...")
-    start_lik_time <- Sys.time()
-    lik[t] <- lik_glmpca_pois_log(
-      Y, rfunc(U,V,offsets), loglik_const
-    )
-    print(lik[t])
     end_lik_time <- Sys.time()
     check_divergence(dev[t],"fisher",ctl$penalty)
     if(ctl$verbose){print_status(dev[t],t,gf$nb_theta)}
@@ -163,13 +158,17 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     # U[,uid]<-U[,uid]+lr*grad_u/info_u
     # V[,vid]<-V[,vid]+lr*grad_v/info_v
     
+    end_iter_time <- Sys.time()
+    iter_time <- difftime(end_iter_time, start_iter_time, units = "secs")
+    time[t] <- iter_time
+    
     if(gf$glmpca_fam %in% c("nb","nb2")){
       #pmin here is to prevent extremely large values, which don't make much difference in the model fitting.
       nb_theta<-est_nb_theta_fisher(Y, gf$linkinv(rfunc(U,V,offsets)), gf$nb_theta)
       gf<-glmpca_family(gf$glmpca_fam, nb_theta=pmin(NB_THETA_MAX,nb_theta))
     }
   }
-  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, lik=lik)
+  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, time=time)
 }
 
 #in the avagrad paper, lr=alpha (step size)
@@ -451,9 +450,11 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   #run optimization
   dev<-rep(NA,ctl$maxIter)
   lik <- rep(NA,ctl$maxIter)
+  time <- rep(NA,ctl$maxIter)
   dev_smooth<-rep(NA,ctl$maxIter)
   for(t in 1:ctl$maxIter){ #one iteration = 1 epoch
     #create minibatch indices
+    start_iter_time <- Sys.time()
     mb_list<-create_minibatches(N,ctl$batch_size,randomize=TRUE)
     B<-length(mb_list)
     #b<- ((t-1) %% B) + 1 #1,2,3,4,...,B,1,2,3,4,...,B,....
@@ -521,6 +522,11 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     j<-seq.int(max(1,t-10+1),t)
     #dev_smooth[t]<-exp(mean(log(dev[j]))) #mean(dev[j])
     dev_smooth[t]<-exp(tail(fitted(lm(log(dev[j])~j)),1))
+    
+    end_iter_time <- Sys.time()
+    iter_time <- difftime(end_iter_time, start_iter_time, units = "secs")
+    time[t] <- iter_time
+    
     # if(t>B){
     #   fit<-StructTS(log(dev[1:t]),type="level")
     #   dev_smooth[t]<-exp(tail(fitted(fit),1))
@@ -538,5 +544,5 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     }
   }
   list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, 
-       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:t])
+       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:t], time[1:t])
 }

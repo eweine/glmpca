@@ -91,5 +91,10 @@ postprocess<-function(fit,uid,vid,lid,rnames=NULL,cnames=NULL){
     res$lik <- fit$lik
 
   }
+  if(!is.null(fit$time)) {
+    
+    res$time <- time
+    
+  }
   res
 }
