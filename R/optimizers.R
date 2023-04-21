@@ -120,7 +120,7 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   sz<-if(gf$glmpca_fam=="binom"){ gf$binom_n } else { NULL }
   loglik_const <- sum(lfactorial(Y))
   dev<-rep(NA,ctl$maxIter)
-  time <- rep(NA,ctl$maxIter)
+  time_vec <- rep(NA,ctl$maxIter)
   for(t in 1:ctl$maxIter){
     start_iter_time <- Sys.time()
     #rmse[t]<-sd(Y-ilfunc(rfunc(U,V,offsets)))
@@ -160,7 +160,7 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     
     end_iter_time <- Sys.time()
     iter_time <- difftime(end_iter_time, start_iter_time, units = "secs")
-    time[t] <- iter_time
+    time_vec[t] <- iter_time
     
     if(gf$glmpca_fam %in% c("nb","nb2")){
       #pmin here is to prevent extremely large values, which don't make much difference in the model fitting.
@@ -168,7 +168,7 @@ fisher_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
       gf<-glmpca_family(gf$glmpca_fam, nb_theta=pmin(NB_THETA_MAX,nb_theta))
     }
   }
-  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, time=time)
+  list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, timing=time_vec)
 }
 
 #in the avagrad paper, lr=alpha (step size)
