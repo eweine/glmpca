@@ -551,5 +551,5 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     }
   }
   list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, 
-       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:t], time[1:(t+1)])
+       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:(t+1)], timing = time[1:t])
 }
