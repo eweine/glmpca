@@ -437,7 +437,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   #gf: object of type glmpca_family
   #rfunc: a function that computes the linear predictor ...
   #...of the GLM from U,V, and offsets.
-  stopifnot(ctl$minIter>10)
+  stopifnot(ctl$minIter>0)
   N<-ncol(Y)
   #lid: which columns of U,V contain the unsupervised factors & loadings
   lid<-intersect(uid,vid)
@@ -454,7 +454,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   dev_smooth<-rep(NA,ctl$maxIter)
   print("calculating likelihood...")
   start_lik_time <- Sys.time()
-  lik[1] <- plash:::lik_glmpca_pois_log_sp(
+  lik[1] <- fastglmpca:::lik_glmpca_pois_log_sp(
     Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
   )
   print(lik[1])
