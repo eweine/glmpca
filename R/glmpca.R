@@ -7,6 +7,7 @@
 #'   and observations as columns. Sparse matrices from the \code{Matrix} 
 #'   package are supported. Column-oriented sparsity is preferred.
 #' @param L desired number of latent dimensions (positive integer).
+#' @param max_seconds_run Maximum number of seconds to run algorithm
 #' @param fam string describing the likelihood to use for the data. Families
 #'   include Poisson ('\code{poi}'), negative binomial with global 
 #'   overdispersion ('\code{nb}'), negative binomial with feature-specific 
@@ -168,7 +169,8 @@
 #' 
 #' @importFrom methods is
 #' @export
-glmpca<-function(Y, L, fam=c("poi","nb","nb2","binom","mult","bern"), 
+glmpca<-function(Y, L, max_seconds_run = 10 * 3600,
+                 fam=c("poi","nb","nb2","binom","mult","bern"), 
                  minibatch=c("none","stochastic","memoized"),
                  optimizer=c("avagrad","fisher"), ctl = list(), 
                  sz=NULL, nb_theta=NULL, X=NULL, Z=NULL, 
@@ -252,7 +254,7 @@ glmpca<-function(Y, L, fam=c("poi","nb","nb2","binom","mult","bern"),
         if(minibatch=="none"){
           fit<-avagrad_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets)
         } else if(minibatch=="stochastic"){
-          fit<-avagrad_stochastic_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets)
+          fit<-avagrad_stochastic_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run)
         } else {
           fit<-avagrad_memoized_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets)
         },

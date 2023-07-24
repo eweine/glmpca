@@ -7,6 +7,7 @@
 glmpca(
   Y,
   L,
+  max_seconds_run = 10 * 3600,
   fam = c("poi", "nb", "nb2", "binom", "mult", "bern"),
   minibatch = c("none", "stochastic", "memoized"),
   optimizer = c("avagrad", "fisher"),
@@ -26,6 +27,8 @@ and observations as columns. Sparse matrices from the \code{Matrix}
 package are supported. Column-oriented sparsity is preferred.}
 
 \item{L}{desired number of latent dimensions (positive integer).}
+
+\item{max_seconds_run}{Maximum number of seconds to run algorithm}
 
 \item{fam}{string describing the likelihood to use for the data. Families
 include Poisson ('\code{poi}'), negative binomial with global 

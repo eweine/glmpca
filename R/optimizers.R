@@ -426,7 +426,7 @@ avagrad_memoized_optimizer2<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
 
 #' @importFrom stats fitted lm
 #' @importFrom utils tail
-avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
+avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run){
   #Y: the data matrix
   #U: initialized factors matrix, including all column covariates & coefficients
   #V: initialized loadings matrix, including all row covariates & coefficients
@@ -459,6 +459,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
   )
   print(lik[1])
   end_lik_time <- Sys.time()
+  start_model_time <- Sys.time()
   for(t in 1:ctl$maxIter){ #one iteration = 1 epoch
     #create minibatch indices
     start_iter_time <- Sys.time()
@@ -532,6 +533,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
     
     end_iter_time <- Sys.time()
     iter_time <- difftime(end_iter_time, start_iter_time, units = "secs")
+    total_time <- difftime(end_iter_time, start_model_time, units = "secs")
     time[t] <- iter_time
     
     # if(t>B){
@@ -549,6 +551,13 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
       }
       # if(fit$coef["level"]<ctl$tol){ break }
     }
+    
+    if (total_time > max_seconds_run) {
+      
+      break
+      
+    }
+    
   }
   list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, 
        dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:(t+1)], timing = time[1:t])
