@@ -519,7 +519,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
     #lik[t] <- sum(dpois(as.vector(Y), exp(as.vector(rfunc(U,V,offsets))), log = TRUE))
     print("calculating likelihood...")
     start_lik_time <- Sys.time()
-    lik[t+1] <- plash:::lik_glmpca_pois_log_sp(
+    lik[t+1] <- fastglmpca:::lik_glmpca_pois_log_sp(
       Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
     )
     print(lik[t+1])
