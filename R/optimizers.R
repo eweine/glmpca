@@ -426,7 +426,7 @@ avagrad_memoized_optimizer2<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
 
 #' @importFrom stats fitted lm
 #' @importFrom utils tail
-avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run){
+avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run,calc_likelihood){
   #Y: the data matrix
   #U: initialized factors matrix, including all column covariates & coefficients
   #V: initialized loadings matrix, including all row covariates & coefficients
@@ -437,7 +437,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
   #gf: object of type glmpca_family
   #rfunc: a function that computes the linear predictor ...
   #...of the GLM from U,V, and offsets.
-  stopifnot(ctl$minIter>0)
+  stopifnot(ctl$minIter>=0)
   N<-ncol(Y)
   #lid: which columns of U,V contain the unsupervised factors & loadings
   lid<-intersect(uid,vid)
@@ -452,13 +452,22 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
   lik <- rep(NA,ctl$maxIter)
   time <- rep(NA,ctl$maxIter)
   dev_smooth<-rep(NA,ctl$maxIter)
-  print("calculating likelihood...")
-  start_lik_time <- Sys.time()
-  lik[1] <- fastglmpca:::lik_glmpca_pois_log_sp(
-    Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
-  )
-  print(lik[1])
-  end_lik_time <- Sys.time()
+  if (calc_likelihood) {
+    
+    print("calculating likelihood...")
+    start_lik_time <- Sys.time()
+    lik[1] <- fastglmpca:::lik_glmpca_pois_log_sp(
+      Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
+    )
+    print(lik[1])
+    end_lik_time <- Sys.time()
+    
+  } else {
+    
+    lik[1] <- 0
+    
+  }
+
   start_model_time <- Sys.time()
   for(t in 1:ctl$maxIter){ #one iteration = 1 epoch
     #create minibatch indices
@@ -517,15 +526,26 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
     #assess convergence after end of each epoch
     dev[t]<-adj_factor*gf$dev_func(Ymb,R,sz=szb)
     #lik[t] <- sum(dpois(as.vector(Y), exp(as.vector(rfunc(U,V,offsets))), log = TRUE))
-    print("calculating likelihood...")
-    start_lik_time <- Sys.time()
-    lik[t+1] <- fastglmpca:::lik_glmpca_pois_log_sp(
-      Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
-    )
-    print(lik[t+1])
-    end_lik_time <- Sys.time()
-    time_taken <- difftime(end_lik_time, start_lik_time, units = "secs")
-    print(glue::glue("Took {time_taken} seconds to compute likelihood"))
+    
+    if (calc_likelihood) {
+      
+      print("calculating likelihood...")
+      start_lik_time <- Sys.time()
+      lik[t+1] <- fastglmpca:::lik_glmpca_pois_log_sp(
+        Y, t(cbind(1, V)), t(cbind(offsets, U)), loglik_const
+      )
+      print(lik[t+1])
+      end_lik_time <- Sys.time()
+      time_taken <- difftime(end_lik_time, start_lik_time, units = "secs")
+      print(glue::glue("Took {time_taken} seconds to compute likelihood"))
+      
+    } else {
+      
+      lik[t+1] <- 0
+      
+    }
+    
+
     check_divergence(dev[t],"avagrad",ctl$lr)
     j<-seq.int(max(1,t-10+1),t)
     #dev_smooth[t]<-exp(mean(log(dev[j]))) #mean(dev[j])
@@ -544,13 +564,13 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
     #   dev_smooth[t]<-exp(tail(fitted(lm(log(dev[j])~j)),1))
     # }
     if(ctl$verbose){print_status(dev[t],t,gf$nb_theta)}
-    if(t>ctl$minIter && (dev_smooth[t]< dev[1])){
+    #if(t>ctl$minIter && (dev_smooth[t]< dev[1])){
       #ensure at least one full pass through the data
-      if(check_convergence(dev_smooth[t-1],dev_smooth[t],ctl$tol,ctl$minDev)){
-       break
-      }
+      #if(check_convergence(dev_smooth[t-1],dev_smooth[t],ctl$tol,ctl$minDev)){
+       #break
+      #}
       # if(fit$coef["level"]<ctl$tol){ break }
-    }
+    #}
     
     if (total_time > max_seconds_run) {
       

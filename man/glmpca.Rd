@@ -8,6 +8,7 @@ glmpca(
   Y,
   L,
   max_seconds_run = 10 * 3600,
+  calc_likelihood = TRUE,
   fam = c("poi", "nb", "nb2", "binom", "mult", "bern"),
   minibatch = c("none", "stochastic", "memoized"),
   optimizer = c("avagrad", "fisher"),

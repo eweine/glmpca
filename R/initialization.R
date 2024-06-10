@@ -14,7 +14,7 @@ init_ctl<-function(N,fam,minibatch,optimizer,ctl){
   if(is.null(ctl$minIter)){ 
     ctl$minIter<-30 
   } else {
-    stopifnot(ctl$minIter>=1)
+    stopifnot(ctl$minIter>=0)
   }
   if(is.null(ctl$maxIter)){ 
     ctl$maxIter<-1000 
