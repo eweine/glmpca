@@ -426,7 +426,7 @@ avagrad_memoized_optimizer2<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets){
 
 #' @importFrom stats fitted lm
 #' @importFrom utils tail
-avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run,calc_likelihood){
+avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run,calc_likelihood,m_u,m_v,v_u,v_v){
   #Y: the data matrix
   #U: initialized factors matrix, including all column covariates & coefficients
   #V: initialized loadings matrix, including all row covariates & coefficients
@@ -442,8 +442,13 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
   #lid: which columns of U,V contain the unsupervised factors & loadings
   lid<-intersect(uid,vid)
   #avagrad initialization: prefix m_ refers to momentum, v_ refers to variance
-  m_u<-v_u<-matrix(0,nrow=N,ncol=length(uid))
-  m_v<-v_v<-matrix(0,nrow=nrow(Y),ncol=length(vid))
+  if (is.null(m_u) | is.null(m_v) | is.null(v_u) | is.null(v_v)) {
+    
+    m_u<-v_u<-matrix(0,nrow=N,ncol=length(uid))
+    m_v<-v_v<-matrix(0,nrow=nrow(Y),ncol=length(vid))
+    
+  }
+
   # if(gf$glmpca_fam %in% c("nb","nb2")){ m_th<-v_th<- 0*gf$nb_theta }
   sz<-if(gf$glmpca_fam=="binom"){ gf$binom_n } else { NULL }
   loglik_const <- sum(MatrixExtra::mapSparse(Y, lfactorial))
@@ -580,5 +585,7 @@ avagrad_stochastic_optimizer<-function(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_se
     
   }
   list(U=U, V=V, dev=check_dev_decr(dev[1:t]), gf=gf, 
-       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:(t+1)], timing = time[1:t])
+       dev_smooth=check_dev_decr(dev_smooth[1:t]), lik = lik[1:(t+1)], timing = time[1:t],
+       m_u=m_u, m_v=m_v, v_u=v_u, v_v=v_v
+       )
 }

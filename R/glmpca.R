@@ -170,6 +170,7 @@
 #' @importFrom methods is
 #' @export
 glmpca<-function(Y, L, max_seconds_run = 10 * 3600, calc_likelihood = TRUE,
+                 m_u=NULL, m_v=NULL, v_u=NULL, v_v=NULL,
                  fam=c("poi","nb","nb2","binom","mult","bern"), 
                  minibatch=c("none","stochastic","memoized"),
                  optimizer=c("avagrad","fisher"), ctl = list(), 
@@ -254,7 +255,7 @@ glmpca<-function(Y, L, max_seconds_run = 10 * 3600, calc_likelihood = TRUE,
         if(minibatch=="none"){
           fit<-avagrad_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets)
         } else if(minibatch=="stochastic"){
-          fit<-avagrad_stochastic_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run,calc_likelihood)
+          fit<-avagrad_stochastic_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets,max_seconds_run,calc_likelihood,m_u,m_v,v_u,v_v)
         } else {
           fit<-avagrad_memoized_optimizer(Y,U,V,uid,vid,ctl,gf,rfunc,offsets)
         },

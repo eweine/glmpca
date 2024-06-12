@@ -96,5 +96,25 @@ postprocess<-function(fit,uid,vid,lid,rnames=NULL,cnames=NULL){
     res$time <- fit$timing
     
   }
+  if(!is.null(fit$m_u)) {
+    
+    res$m_u <- fit$m_u
+    
+  }
+  if(!is.null(fit$m_v)) {
+    
+    res$m_v <- fit$m_v
+    
+  }
+  if(!is.null(fit$v_v)) {
+    
+    res$v_v <- fit$v_v
+    
+  }
+  if(!is.null(fit$v_u)) {
+    
+    res$v_u <- fit$v_u
+    
+  }
   res
 }
